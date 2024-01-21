@@ -19,9 +19,9 @@ ADMINS= JSON.parse(fs.readFileSync("admins.json","utf-8"));
 USERS=JSON.parse(fs.readFileSync("users.json","utf-8"));
 COURSES=JSON.parse(fs.readFileSync("courses.json","utf-8"));
 }catch{
-  console.log("Inside catch");
+
   ADMINS=[];
-  USERS=[];
+  USERS=[]; 
   COURSES=[];
 }
 
@@ -55,7 +55,7 @@ app.post("/admin/signup", (req, res) => {
     const newAdmin={username,password};
     ADMINS.push(newAdmin);
     fs.writeFileSync("admins.json",JSON.stringify(ADMINS));
-    const token=jwt.sign({username,role:'admin'},Secret,{expiresIn:'1h'});
+    const token=jwt.sign({username,role:'Admin'},Secret,{expiresIn:'1h'});
     res.json({message:'Signup Successful',token});
   }
 
@@ -77,6 +77,25 @@ app.post("/admin/signin",(req,res)=>{
 
 app.get("/admin/me",authenticateJwt,(req,res)=>{
    res.json(req.user);
+})
+
+//Route for Adding a course
+
+app.post("/admin/addCourse",authenticateJwt,(req,res)=>{
+     let courseDetails=req.body;
+     courseDetails.courseID=COURSES.length+1;
+     COURSES.push(courseDetails);
+     fs.writeFileSync("courses.json",JSON.stringify(COURSES));
+     res.status(200).json({message:"Course Id is "+ courseDetails.courseID})
+})
+
+app.get("/admin/courses",authenticateJwt,(req,res)=>{
+  console.log(req.user);
+    if(req.user.role==='Admin'){
+      res.status(200).json({"Courses":COURSES});
+    }else{
+      res.status(402).json({"message":"No proper access"})
+    }
 })
 
 app.listen(port, () => {
